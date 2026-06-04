@@ -119,4 +119,43 @@ agency-cms/
 3. Откройте http://localhost:8000/demo.html
 4. Убедитесь, что карточка появилась
 
+❓ Часто задаваемые вопросы
+
+1. Как интегрировать с React/Vue/Angular?
+
+CMS не зависит от фреймворка. Просто добавьте в любой компонент:
+
+<div id="team-container"></div>
+
+Подключите скрипт и инициализируйте:
+
+useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'http://localhost:8000/embed.js';
+    script.onload = () => {
+        window.AgencyCMS.loadTeam('#team-container');
+        window.AgencyCMS.applyTheme();
+        window.AgencyCMS.loadLinks('#links-container');
+    };
+    document.head.appendChild(script);
+}, []);
+
+2. Как быть с большой файловой структурой?
+
+CMS ищет только свой контейнер (`#team-container`, `#links-container`). Ей не важно, React у вас, Vue, Angular или простой HTML.
+
+3. Что делать с цветами через SCSS/CSS?
+
+CMS не трогает ваши стили. Она добавляет свои CSS-переменные (`--cms-primary`, `--cms-secondary`) и применяет их только к своим элементам (`.cms-team-card`, `.cms-button`). Если не хотите влияния на цвета — просто не вызывайте `applyTheme()`.
+
+4. Это работает на реальном сайте или только в демо?
+
+Работает на реальном сайте. Демо — пример использования. CMS — полноценный сервер на Node.js с REST API. Запускается через Docker. Можно развернуть на любом хостинге (Render, VPS, свой сервер) и подключить к реальному сайту.
+
+📌 Что ещё можно добавить (по желанию)
+
+В начале README.md, после "Быстрый старт", добавь строку:
+
+✅ Работает с любым фреймворком:** React, Vue, Angular, обычный HTML.
+
 © 2026 Agency CMS
