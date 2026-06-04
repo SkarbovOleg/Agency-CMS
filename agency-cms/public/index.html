@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agency CMS - Портал</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin-bottom: 50px;
+        }
+        .sites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        .site-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+        .site-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .site-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .site-card h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .site-card p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .site-url {
+            background: #f0f0f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #667eea;
+            font-family: monospace;
+        }
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            margin-top: 50px;
+        }
+        code {
+            background: rgba(0,0,0,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Agency CMS</h1>
+        <div class="subtitle">Система управления контентом</div>
+        
+        <div class="sites-grid">
+            <a href="admin.html" class="site-card">
+                <div class="site-icon">📋</div>
+                <h2>Админ-панель</h2>
+                <p>Управление сотрудниками, цветами и ссылками</p>
+                <div class="site-url">admin.html</div>
+            </a>
+            
+            <a href="demo.html" class="site-card">
+                <div class="site-icon">🎨</div>
+                <h2>Демо-сайт</h2>
+                <p>Пример внедрения CMS на сайт</p>
+                <div class="site-url">demo.html</div>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>Данные хранятся в вашем браузере (localStorage)</p>
+        </div>
+    </div>
+</body>
+</html>

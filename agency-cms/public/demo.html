@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Агентство Digital Solutions - Демо</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 50px;
+        }
+        header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        header p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+        .section-title {
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        .team-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .team-card:hover {
+            transform: translateY(-5px);
+        }
+        .team-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+        .team-card h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .team-card .position {
+            color: #666;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .team-card .bio {
+            color: #777;
+            line-height: 1.5;
+        }
+        .links-section {
+            background: #f9f9f9;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        .links-section h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .cms-link {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .cms-link:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        .cms-button {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .cms-button:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 50px;
+            border-top: 1px solid #ddd;
+            color: #999;
+        }
+        .nav-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .nav-btn {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .nav-btn:hover {
+            background: #5a67d8;
+        }
+        @media (max-width: 768px) {
+            header h1 { font-size: 32px; }
+            .team-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Агентство Digital Solutions</h1>
+            <p>Создаём эффективные решения для бизнеса с 2010 года</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h2 class="section-title">Наша команда</h2>
+        <div id="teamContainer" class="team-grid"></div>
+        
+        <div class="links-section">
+            <h2>Свяжитесь с нами</h2>
+            <div id="linksContainer"></div>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="index.html" class="nav-btn">🏠 Портал</a>
+            <a href="admin.html" class="nav-btn">📋 Админ-панель</a>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2024 Агентство Digital Solutions. Все права защищены.</p>
+    </footer>
+    
+    <script>
+        // ============ Загрузка данных из localStorage ============
+        function loadTeam() {
+            const team = JSON.parse(localStorage.getItem('team') || '[]');
+            const container = document.getElementById('teamContainer');
+            
+            if (team.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">Нет сотрудников в команде. Добавьте их в админ-панели!</p>';
+                return;
+            }
+            
+            container.innerHTML = team.map(member => `
+                <div class="team-card">
+                    ${member.avatar_url ? `<img src="${member.avatar_url}" alt="${escapeHtml(member.full_name)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22 viewBox=%220 0 150 150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23ddd%22/%3E%3Ctext x=%2275%22 y=%2280%22 text-anchor=%22middle%22 fill=%22%23999%22%3E📷%3C/text%3E%3C/svg%3E'">` : '<div style="width:150px; height:150px; background:#ddd; border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center;">📷</div>'}
+                    <h3>${escapeHtml(member.full_name)}</h3>
+                    <div class="position">${escapeHtml(member.position)}</div>
+                    <div class="bio">${escapeHtml(member.bio || '')}</div>
+                </div>
+            `).join('');
+        }
+        
+        function loadTheme() {
+            const theme = JSON.parse(localStorage.getItem('theme') || '{"primary_color":"#3498db","secondary_color":"#2c3e50","background_color":"#f5f5f5"}');
+            
+            if (theme.background_color) {
+                document.body.style.backgroundColor = theme.background_color;
+            }
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                :root {
+                    --cms-primary: ${theme.primary_color || '#3498db'};
+                    --cms-secondary: ${theme.secondary_color || '#2c3e50'};
+                }
+                a, .cms-link {
+                    color: var(--cms-primary) !important;
+                }
+                .cms-link:hover {
+                    opacity: 0.8;
+                }
+                button, .cms-button {
+                    background-color: var(--cms-secondary) !important;
+                    color: white !important;
+                    border: none !important;
+                }
+                .cms-button:hover {
+                    opacity: 0.9;
+                    cursor: pointer;
+                }
+            `;
+            
+            const oldStyle = document.getElementById('cms-theme-style');
+            if (oldStyle) oldStyle.remove();
+            style.id = 'cms-theme-style';
+            document.head.appendChild(style);
+        }
+        
+        function loadLinks() {
+            const links = JSON.parse(localStorage.getItem('links') || '[]');
+            const container = document.getElementById('linksContainer');
+            
+            if (links.length === 0) {
+                container.innerHTML = '<p>Нет ссылок. Добавьте их в админ-панели!</p>';
+                return;
+            }
+            
+            container.innerHTML = links.map(link => {
+                if (link.type === 'button') {
+                    return `<button class="cms-button" onclick="window.open('${escapeHtml(link.url)}', '_blank')">${escapeHtml(link.name)}</button>`;
+                } else {
+                    return `<a href="${escapeHtml(link.url)}" class="cms-link" target="_blank" rel="noopener noreferrer">${escapeHtml(link.name)}</a>`;
+                }
+            }).join('');
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        // Инициализация
+        loadTeam();
+        loadTheme();
+        loadLinks();
+    </script>
+</body>
+</html>
