@@ -140,9 +140,12 @@
         .nav-btn:hover {
             background: #5a67d8;
         }
-        @media (max-width: 768px) {
-            header h1 { font-size: 32px; }
-            .team-grid { grid-template-columns: 1fr; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .team-card, .links-section {
+            animation: fadeIn 0.5s ease;
         }
     </style>
 </head>
@@ -156,11 +159,15 @@
     
     <div class="container">
         <h2 class="section-title">Наша команда</h2>
-        <div id="teamContainer" class="team-grid"></div>
+        <div id="teamContainer" class="team-grid">
+            <div style="text-align:center; grid-column:1/-1; color:#999;">Загрузка...</div>
+        </div>
         
         <div class="links-section">
             <h2>Свяжитесь с нами</h2>
-            <div id="linksContainer"></div>
+            <div id="linksContainer">
+                <div style="color:#999;">Загрузка...</div>
+            </div>
         </div>
         
         <div class="nav-buttons">
@@ -174,94 +181,135 @@
     </footer>
     
     <script>
-        // ============ Загрузка данных из localStorage ============
-        function loadTeam() {
-            const team = JSON.parse(localStorage.getItem('team') || '[]');
+        // API endpoint (относительный путь, работает с того же сервера)
+        const API = '/api';
+        
+        // ============ Загрузка команды с сервера ============
+        async function loadTeam() {
             const container = document.getElementById('teamContainer');
             
-            if (team.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#999;">Нет сотрудников в команде. Добавьте их в админ-панели!</p>';
-                return;
+            try {
+                const response = await fetch(`${API}/team`);
+                const team = await response.json();
+                
+                if (team.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; grid-column:1/-1; color:#999;">👥 Нет сотрудников в команде. Добавьте их в админ-панели!</div>';
+                    return;
+                }
+                
+                container.innerHTML = team.map(member => `
+                    <div class="team-card">
+                        ${member.avatar_url ? 
+                            `<img src="${member.avatar_url}" alt="${escapeHtml(member.full_name)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22 viewBox=%220 0 150 150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23ddd%22/%3E%3Ctext x=%2275%22 y=%2280%22 text-anchor=%22middle%22 fill=%22%23999%22%3E📷%3C/text%3E%3C/svg%3E'">` : 
+                            '<div style="width:150px; height:150px; background:#ddd; border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:48px;">📷</div>'
+                        }
+                        <h3>${escapeHtml(member.full_name)}</h3>
+                        <div class="position">${escapeHtml(member.position)}</div>
+                        <div class="bio">${escapeHtml(member.bio || '')}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Ошибка загрузки команды:', error);
+                container.innerHTML = '<div style="text-align:center; grid-column:1/-1; color:#e74c3c;">❌ Ошибка загрузки данных. Убедитесь, что сервер запущен.</div>';
             }
-            
-            container.innerHTML = team.map(member => `
-                <div class="team-card">
-                    ${member.avatar_url ? `<img src="${member.avatar_url}" alt="${escapeHtml(member.full_name)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22 viewBox=%220 0 150 150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23ddd%22/%3E%3Ctext x=%2275%22 y=%2280%22 text-anchor=%22middle%22 fill=%22%23999%22%3E📷%3C/text%3E%3C/svg%3E'">` : '<div style="width:150px; height:150px; background:#ddd; border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center;">📷</div>'}
-                    <h3>${escapeHtml(member.full_name)}</h3>
-                    <div class="position">${escapeHtml(member.position)}</div>
-                    <div class="bio">${escapeHtml(member.bio || '')}</div>
-                </div>
-            `).join('');
         }
         
-        function loadTheme() {
-            const theme = JSON.parse(localStorage.getItem('theme') || '{"primary_color":"#3498db","secondary_color":"#2c3e50","background_color":"#f5f5f5"}');
-            
-            if (theme.background_color) {
-                document.body.style.backgroundColor = theme.background_color;
+        // ============ Загрузка цветовой темы с сервера ============
+        async function loadTheme() {
+            try {
+                const response = await fetch(`${API}/theme`);
+                const theme = await response.json();
+                
+                // Применяем цвет фона к body
+                if (theme.background_color) {
+                    document.body.style.backgroundColor = theme.background_color;
+                }
+                
+                // Применяем цвета через CSS переменные
+                const style = document.createElement('style');
+                style.textContent = `
+                    :root {
+                        --cms-primary: ${theme.primary_color || '#3498db'};
+                        --cms-secondary: ${theme.secondary_color || '#2c3e50'};
+                    }
+                    a, .cms-link {
+                        color: var(--cms-primary) !important;
+                    }
+                    a:hover, .cms-link:hover {
+                        opacity: 0.8;
+                    }
+                    button, .cms-button {
+                        background-color: var(--cms-secondary) !important;
+                        color: white !important;
+                        border: none !important;
+                    }
+                    button:hover, .cms-button:hover {
+                        opacity: 0.9;
+                        cursor: pointer;
+                        transform: translateY(-2px);
+                    }
+                    .team-card {
+                        border-top: 3px solid var(--cms-primary);
+                    }
+                `;
+                
+                // Удаляем старый стиль если есть
+                const oldStyle = document.getElementById('cms-theme-style');
+                if (oldStyle) oldStyle.remove();
+                
+                style.id = 'cms-theme-style';
+                document.head.appendChild(style);
+            } catch (error) {
+                console.error('Ошибка загрузки темы:', error);
             }
-            
-            const style = document.createElement('style');
-            style.textContent = `
-                :root {
-                    --cms-primary: ${theme.primary_color || '#3498db'};
-                    --cms-secondary: ${theme.secondary_color || '#2c3e50'};
-                }
-                a, .cms-link {
-                    color: var(--cms-primary) !important;
-                }
-                .cms-link:hover {
-                    opacity: 0.8;
-                }
-                button, .cms-button {
-                    background-color: var(--cms-secondary) !important;
-                    color: white !important;
-                    border: none !important;
-                }
-                .cms-button:hover {
-                    opacity: 0.9;
-                    cursor: pointer;
-                }
-            `;
-            
-            const oldStyle = document.getElementById('cms-theme-style');
-            if (oldStyle) oldStyle.remove();
-            style.id = 'cms-theme-style';
-            document.head.appendChild(style);
         }
         
-        function loadLinks() {
-            const links = JSON.parse(localStorage.getItem('links') || '[]');
+        // ============ Загрузка ссылок с сервера ============
+        async function loadLinks() {
             const container = document.getElementById('linksContainer');
             
-            if (links.length === 0) {
-                container.innerHTML = '<p>Нет ссылок. Добавьте их в админ-панели!</p>';
-                return;
-            }
-            
-            container.innerHTML = links.map(link => {
-                if (link.type === 'button') {
-                    return `<button class="cms-button" onclick="window.open('${escapeHtml(link.url)}', '_blank')">${escapeHtml(link.name)}</button>`;
-                } else {
-                    return `<a href="${escapeHtml(link.url)}" class="cms-link" target="_blank" rel="noopener noreferrer">${escapeHtml(link.name)}</a>`;
+            try {
+                const response = await fetch(`${API}/links`);
+                const links = await response.json();
+                
+                if (links.length === 0) {
+                    container.innerHTML = '<div style="color:#999;">🔗 Нет ссылок. Добавьте их в админ-панели!</div>';
+                    return;
                 }
-            }).join('');
+                
+                container.innerHTML = links.map(link => {
+                    if (link.type === 'button') {
+                        return `<button class="cms-button" onclick="window.open('${escapeHtml(link.url)}', '_blank')">${escapeHtml(link.name)}</button>`;
+                    } else {
+                        return `<a href="${escapeHtml(link.url)}" class="cms-link" target="_blank" rel="noopener noreferrer">${escapeHtml(link.name)}</a>`;
+                    }
+                }).join('');
+            } catch (error) {
+                console.error('Ошибка загрузки ссылок:', error);
+                container.innerHTML = '<div style="color:#e74c3c;">❌ Ошибка загрузки ссылок</div>';
+            }
         }
         
+        // ============ Вспомогательная функция ============
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
         
-        // Инициализация
-        loadTeam();
-        loadTheme();
-        loadLinks();
+        // ============ Инициализация ============
+        async function init() {
+            await loadTeam();
+            await loadTheme();
+            await loadLinks();
+        }
+        
+        // Запускаем загрузку данных
+        init();
     </script>
 </body>
 </html>
