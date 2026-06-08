@@ -1,161 +1,411 @@
-Agency CMS
+ 📖 Agency CMS  Полная инструкция (без папки backend)
 
-CMS для управления сайтом агентства. Позволяет управлять карточками сотрудников, цветовой темой и внешними ссылками.
+ О проекте
 
-🚀 Быстрый старт (за 3 минуты)
+Agency CMS  система управления контентом для сайта агентства. Позволяет управлять карточками сотрудников, цветовой темой и внешними ссылками через удобную админпанель и REST API.
 
-Требования
-Docker Desktop (скачать с [docker.com](https://www.docker.com/products/docker-desktop/))
-
-Запуск
-
-1. Склонировать репозиторий
-git clone https://github.com/ВАШ_ЛОГИН/agency-cms
-cd agency-cms
-
-2. Запустить одной командой
-docker-compose up --build
+Вся структура проекта находится в корневой папке, без вложенной папки `backend`.
 
 
-### После запуска
+
+ 📁 Структура проекта (актуальная)
+
+agencycms/
+ server.js               Express сервер + REST API
+ database.js             SQLite база данных
+ package.json            Зависимости
+ Dockerfile              Docker образ
+ dockercompose.yml      Docker Compose
+ uploads/                Аватары сотрудников
+ database.sqlite         База данных (создаётся автоматически)
+ public/
+│    index.html          Портал
+│    admin.html          Админпанель
+│    demo.html           Демосайт
+│   └ embed.js            Скрипт для интеграции
+└ README.md               Документация
+
+
+
+ 🚀 Быстрый старт (за 3 минуты)
+
+ Требования
+ Docker Desktop (скачать с [docker.com](https://www.docker.com/products/dockerdesktop/))
+
+ Запуск одной командой
+
+ 1. Склонировать репозиторий
+git clone https://github.com/ВАШ_ЛОГИН/agencycms
+cd agencycms
+
+ 2. Запустить проект
+dockercompose up build
+
+ После запуска
 
 | Страница | Адрес |
-|----------|-------|
+|||
 | Портал | http://localhost:8000 |
-| Админ-панель | http://localhost:8000/admin.html |
-| Демо-сайт | http://localhost:8000/demo.html |
+| Админпанель | http://localhost:8000/admin.html |
+| Демосайт | http://localhost:8000/demo.html |
 
-Остановка
+ Остановка проекта
 
-docker-compose down
+dockercompose down
 
-📋 Функционал
+
+
+
+ 📋 Функционал
 
 | Функция | Описание |
-|---------|----------|
-| **Команда** | Добавление/удаление сотрудников (ФИО, должность, описание, аватар) |
-| **Цветовая тема** | Изменение основных цветов сайта |
-| **Внешние ссылки** | Добавление ссылок (обычные или кнопки) |
+|||
+| **Команда** | Добавление/редактирование/удаление сотрудников (ФИО, должность, описание, аватар) |
+| **Цветовая тема** | Изменение основных цветов сайта в реальном времени |
+| **Внешние ссылки** | Добавление ссылок (обычные или кнопки) для соцсетей |
 
-🔌 Интеграция в ваш сайт
 
-1. Подключите скрипт
+
+ 🔌 Интеграция на ваш сайт
+
+ Способ 1: Быстрая интеграция (рекомендуется)
+
+ Шаг 1. Подключите скрипт
+
+Добавьте в `<head>` вашего сайта:
 
 <script src="http://localhost:8000/embed.js"></script>
 
 
-2. Добавьте контейнеры
+ Шаг 2. Добавьте контейнеры
 
-<!-- Для команды -->
-<div id="team-container"></div>
+В места, где должны отображаться данные:
 
-<!-- Для ссылок -->
-<div id="links-container"></div>
+<! Для команды >
+<div id="teamcontainer"></div>
 
-3. Инициализируйте
+<! Для ссылок >
+<div id="linkscontainer"></div>
+
+
+ Шаг 3. Инициализируйте CMS
+
+Добавьте перед закрывающим тегом `</body>`:
 
 <script>
-    AgencyCMS.loadTeam('#team-container');
+    // Загрузка команды
+    AgencyCMS.loadTeam('teamcontainer');
+    
+    // Применение цветовой темы
     AgencyCMS.applyTheme();
-    AgencyCMS.loadLinks('#links-container');
+    
+    // Загрузка ссылок
+    AgencyCMS.loadLinks('linkscontainer');
 </script>
+```
 
-📡 REST API
+ Шаг 4. Добавьте стили (опционально)
+
+.teamgrid {
+    display: grid;
+    gridtemplatecolumns: repeat(autofill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.cmsteamcard {
+    background: white;
+    borderradius: 12px;
+    padding: 20px;
+    textalign: center;
+    boxshadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.cmsteamcard img {
+    width: 150px;
+    height: 150px;
+    borderradius: 50%;
+    objectfit: cover;
+}
+
+.cmslink, .cmsbutton {
+    display: inlineblock;
+    margin: 0 10px;
+    padding: 10px 20px;
+    borderradius: 8px;
+    textdecoration: none;
+}
+
+.cmsbutton {
+    border: none;
+    cursor: pointer;
+}
+
+
+ Способ 2: Интеграция с React
+
+import { useEffect } from 'react';
+
+function App() {
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = 'http://localhost:8000/embed.js';
+        script.onload = () => {
+            window.AgencyCMS.loadTeam('teamcontainer');
+            window.AgencyCMS.applyTheme();
+            window.AgencyCMS.loadLinks('linkscontainer');
+        };
+        document.head.appendChild(script);
+    }, []);
+
+    return (
+        <div>
+            <div id="teamcontainer"></div>
+            <div id="linkscontainer"></div>
+        </div>
+    );
+}
+
+
+ Способ 3: Только API (для разработчиков)
+
+// Получить всех сотрудников
+fetch('/api/team')
+    .then(res => res.json())
+    .then(team => console.log(team));
+
+// Получить цветовую тему
+fetch('/api/theme')
+    .then(res => res.json())
+    .then(theme => console.log(theme));
+
+// Получить ссылки
+fetch('/api/links')
+    .then(res => res.json())
+    .then(links => console.log(links));
+
+
+
+ 📡 REST API
+
+ Эндпоинты
 
 | Метод | Эндпоинт | Описание |
-|-------|----------|----------|
-| GET | `/api/team` | Все сотрудники |
+||||
+| GET | `/api/team` | Получить всех сотрудников |
 | POST | `/api/team` | Добавить сотрудника |
 | DELETE | `/api/team/:id` | Удалить сотрудника |
-| GET | `/api/theme` | Цветовая тема |
-| PUT | `/api/theme` | Обновить тему |
-| GET | `/api/links` | Все ссылки |
+| GET | `/api/theme` | Получить цветовую тему |
+| PUT | `/api/theme` | Обновить цветовую тему |
+| GET | `/api/links` | Получить все ссылки |
 | POST | `/api/links` | Добавить ссылку |
 | DELETE | `/api/links/:id` | Удалить ссылку |
 
-Пример запроса (добавление сотрудника)
+ Примеры запросов
 
-curl -X POST http://localhost:8000/api/team \
-  -F "full_name=Иван Иванов" \
-  -F "position=Дизайнер" \
-  -F "bio=Опыт 5 лет" \
-  -F "avatar=@photo.jpg"
+Добавление сотрудника:
+
+curl X POST http://localhost:8000/api/team \
+  H "ContentType: application/json" \
+  d '{"full_name":"Иван Иванов","position":"Дизайнер","bio":"Опыт 5 лет"}'
+
+
+Обновление темы:
+
+curl X PUT http://localhost:8000/api/theme \
+  H "ContentType: application/json" \
+  d '{"primary_color":"ff0000","secondary_color":"00ff00","background_color":"ffffff"}'
+
+
+Добавление ссылки:
+
+curl X POST http://localhost:8000/api/links \
+  H "ContentType: application/json" \
+  d '{"name":"Telegram","url":"https://t.me/username","type":"button"}'
+
+
+Пример ответа API
+
+GET /api/team:
+
+[
+    {
+        "id": "123e4567e89b12d3a456426614174000",
+        "full_name": "Иван Иванов",
+        "position": "Дизайнер",
+        "bio": "Опыт работы 5 лет",
+        "avatar_url": "/uploads/photo.jpg",
+        "created_at": "20240608 12:00:00"
+    }
+]
+
 
 🛠 Установка без Docker
 
 Если Docker не установлен:
 
+ 1. Установить зависимости
 npm install
+
+ 2. Запустить сервер
 node server.js
 
-📁 Структура проекта
 
-agency-cms/
-├── docker-compose.yml   # Запуск одной командой
-├── Dockerfile
-├── server.js            # Express + REST API
-├── package.json
-├── db.json              # База данных (создаётся автоматически)
-├── uploads/             # Аватары сотрудников
-├── public/
-│   ├── index.html       # Портал
-│   ├── admin.html       # Админ-панель
-│   ├── demo.html        # Демо-сайт
-│   └── embed.js         # Скрипт для интеграции
-└── README.md
+После запуска откройте http://localhost:8000
 
-⚠️ Возможные проблемы
+
+🗄️ База данных (SQLite)
+
+Схема БД
+
+Таблица `team`:
+ `id` (TEXT, PRIMARY KEY)  уникальный идентификатор
+ `full_name` (TEXT, NOT NULL)  ФИО сотрудника
+ `position` (TEXT, NOT NULL)  должность
+ `bio` (TEXT)  описание
+ `avatar_url` (TEXT)  ссылка на аватар
+ `created_at` (DATETIME)  дата создания
+
+Таблица `theme`:
+ `id` (INTEGER, PRIMARY KEY)  всегда 1
+ `primary_color` (TEXT)  основной цвет
+ `secondary_color` (TEXT)  вторичный цвет
+ `background_color` (TEXT)  цвет фона
+ `updated_at` (DATETIME)  дата обновления
+
+Таблица `links`:
+ `id` (TEXT, PRIMARY KEY)  уникальный идентификатор
+ `name` (TEXT, NOT NULL)  название ссылки
+ `url` (TEXT, NOT NULL)  URL
+ `type` (TEXT)  тип: 'href' или 'button'
+
+
+📄 Файлы для GitHub (все в корне)
+
+`Dockerfile`
+
+FROM node:18alpine
+WORKDIR /app
+RUN apk add nocache sqlite
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN mkdir p uploads
+EXPOSE 8000
+CMD ["npm", "start"]
+
+`dockercompose.yml`
+
+services:
+  cms:
+    build: .
+    ports:
+       "8000:8000"
+    volumes:
+       ./uploads:/app/uploads
+       ./database.sqlite:/app/database.sqlite
+       ./public:/app/public
+    restart: unlessstopped
+
+`package.json`
+
+{
+  "name": "agencycms",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5lts.1",
+    "uuid": "^9.0.0",
+    "sqlite3": "^5.1.7"
+  }
+}
+
+🧑‍💻 Админпанель
+
+Возможности
+
+| Раздел | Что можно делать |
+|||
+| **Команда** | Добавлять сотрудников (ФИО, должность, описание, URL аватара), удалять |
+| **Цветовая тема** | Выбирать основной, вторичный цвет и цвет фона |
+| **Внешние ссылки** | Добавлять ссылки (обычные или кнопки), удалять |
+
+
+🎨 Демосайт
+
+Пример внедрения CMS на сайт. Показывает:
+
+ Карточки всех добавленных сотрудников
+ Применённую цветовую тему
+ Добавленные ссылки и кнопки
+
+
+⚠️ Возможные проблемы и решения
 
 | Проблема | Решение |
-|----------|---------|
+|||
 | `docker: command not found` | Установите Docker Desktop |
-| Порт 8000 занят | Остановите программу, использующую порт |
-| Ошибка при сборке | Запустите `docker-compose down` и повторите |
+| Порт 8000 занят | Остановите программу, использующую порт, или измените порт в `dockercompose.yml` |
+| Ошибка при сборке Docker | Запустите `dockercompose down`, затем `dockercompose up build` |
+| Аватары не отображаются | Проверьте что URL аватара доступен из интернета |
+| Данные не сохраняются | Проверьте права на запись в папке проекта |
+| `Cannot GET /` | Убедитесь что папка `public` существует и содержит `index.html` |
+| `SQLITE_ERROR: no such table` | Удалите `database.sqlite` и перезапустите  таблицы создадутся заново |
 
-✅ Проверка работоспособности
-
-1. Откройте http://localhost:8000/admin.html
-2. Добавьте сотрудника
-3. Откройте http://localhost:8000/demo.html
-4. Убедитесь, что карточка появилась
 
 ❓ Часто задаваемые вопросы
 
 1. Как интегрировать с React/Vue/Angular?
 
-CMS не зависит от фреймворка. Просто добавьте в любой компонент:
-
-<div id="team-container"></div>
-
-Подключите скрипт и инициализируйте:
-
-useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'http://localhost:8000/embed.js';
-    script.onload = () => {
-        window.AgencyCMS.loadTeam('#team-container');
-        window.AgencyCMS.applyTheme();
-        window.AgencyCMS.loadLinks('#links-container');
-    };
-    document.head.appendChild(script);
-}, []);
+CMS не зависит от фреймворка. Просто добавьте `<div id="teamcontainer"></div>` в любой компонент и подключите `embed.js`.
 
 2. Как быть с большой файловой структурой?
 
-CMS ищет только свой контейнер (`#team-container`, `#links-container`). Ей не важно, React у вас, Vue, Angular или простой HTML.
+CMS ищет только свои контейнеры (`teamcontainer`, `linkscontainer`). Ей не важно, React у вас, Vue или обычный HTML.
 
 3. Что делать с цветами через SCSS/CSS?
 
-CMS не трогает ваши стили. Она добавляет свои CSS-переменные (`--cms-primary`, `--cms-secondary`) и применяет их только к своим элементам (`.cms-team-card`, `.cms-button`). Если не хотите влияния на цвета — просто не вызывайте `applyTheme()`.
+CMS не трогает ваши стили. Она добавляет свои CSSпеременные и применяет их только к своим элементам (`.cmsteamcard`, `.cmsbutton`).
 
-4. Это работает на реальном сайте или только в демо?
+4. Это работает на реальном сайте?
 
-Работает на реальном сайте. Демо — пример использования. CMS — полноценный сервер на Node.js с REST API. Запускается через Docker. Можно развернуть на любом хостинге (Render, VPS, свой сервер) и подключить к реальному сайту.
+Да. Демосайт  просто пример. CMS  полноценный сервер на Node.js с REST API и базой данных SQLite. Можно развернуть на любом хостинге (Render, VPS, свой сервер).
 
-📌 Что ещё можно добавить (по желанию)
+5. Где хранятся данные?
 
-В начале README.md, после "Быстрый старт", добавь строку:
+Данные хранятся в SQLite базе данных (`database.sqlite`). Аватары  в папке `uploads/`.
 
-✅ Работает с любым фреймворком:** React, Vue, Angular, обычный HTML.
+6. Как сделать резервную копию?
+
+Скопируйте файлы `database.sqlite` и папку `uploads/`.
+
+
+📝 Чеклист для сдачи проекта
+
+ [ ] Репозиторий на GitHub
+ [ ] `Dockerfile` в корне
+ [ ] `dockercompose.yml` в корне
+ [ ] `dockercompose up build` работает
+ [ ] Админпанель открывается
+ [ ] Можно добавить сотрудника
+ [ ] Можно изменить цветовую тему
+ [ ] Можно добавить ссылку
+ [ ] Демосайт отображает все изменения
+ [ ] REST API возвращает JSON
+ [ ] `README.md` заполнен
+
+
+📄 Лицензия
+
+MIT
+
+
+👤 Контакты
+
+По вопросам интеграции: agencycmsofficial@gmail.com
 
 © 2026 Agency CMS
