@@ -1,22 +1,21 @@
 const express = require('express');
 const multer = require('multer');
-const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const db = require('./database');
 
 const app = express();
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Папки
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadsDir),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
@@ -24,93 +23,117 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.use('/uploads', express.static(uploadsDir));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
 
-// БД
-const dbPath = path.join(__dirname, 'db.json');
-let db = { team: [], theme: {}, links: [] };
+// ============ API КОМАНДА ============
 
-if (fs.existsSync(dbPath) && fs.statSync(dbPath).isFile()) {
-    try {
-        db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-    } catch(e) {
-        console.log('Ошибка чтения db.json, создаём новый');
-    }
-}
-
-if (!db.theme || !db.theme.primary_color) {
-    db.theme = {
-        primary_color: '#3498db',
-        secondary_color: '#2c3e50',
-        background_color: '#f5f5f5'
-    };
-}
-
-if (!db.team) db.team = [];
-if (!db.links) db.links = [];
-
-const saveDB = () => fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-saveDB();
-
-// API - Команда
-app.get('/api/team', (req, res) => res.json(db.team));
+app.get('/api/team', (req, res) => {
+    db.all(`SELECT * FROM team ORDER BY created_at DESC`, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows || []);
+    });
+});
 
 app.post('/api/team', upload.single('avatar'), (req, res) => {
-    const member = {
-        id: uuidv4(),
-        full_name: req.body.full_name,
-        position: req.body.position,
-        bio: req.body.bio,
-        avatar_url: req.file ? `/uploads/${req.file.filename}` : null
-    };
-    db.team.push(member);
-    saveDB();
-    res.json(member);
+    const id = uuidv4();
+    const { full_name, position, bio } = req.body;
+    const avatar_url = req.file ? `/uploads/${req.file.filename}` : null;
+
+    if (!full_name || !position) {
+        return res.status(400).json({ error: 'full_name и position обязательны' });
+    }
+
+    db.run(
+        `INSERT INTO team (id, full_name, position, bio, avatar_url) VALUES (?, ?, ?, ?, ?)`,
+        [id, full_name, position, bio || '', avatar_url],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id, full_name, position, bio: bio || '', avatar_url });
+        }
+    );
 });
 
 app.delete('/api/team/:id', (req, res) => {
-    db.team = db.team.filter(m => m.id !== req.params.id);
-    saveDB();
-    res.json({ success: true });
+    db.run(`DELETE FROM team WHERE id = ?`, req.params.id, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, deleted: this.changes });
+    });
 });
 
-// API - Тема
-app.get('/api/theme', (req, res) => res.json(db.theme));
+// ============ API ТЕМА ============
+
+app.get('/api/theme', (req, res) => {
+    db.get(`SELECT primary_color, secondary_color, background_color FROM theme WHERE id = 1`, (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(row || { primary_color: '#3498db', secondary_color: '#2c3e50', background_color: '#f5f5f5' });
+    });
+});
 
 app.put('/api/theme', (req, res) => {
-    db.theme = { ...db.theme, ...req.body };
-    saveDB();
-    res.json(db.theme);
+    const { primary_color, secondary_color, background_color } = req.body;
+    db.run(
+        `UPDATE theme SET primary_color = COALESCE(?, primary_color), secondary_color = COALESCE(?, secondary_color), background_color = COALESCE(?, background_color), updated_at = CURRENT_TIMESTAMP WHERE id = 1`,
+        [primary_color, secondary_color, background_color],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        }
+    );
 });
 
-// API - Ссылки
-app.get('/api/links', (req, res) => res.json(db.links));
+// ============ API ССЫЛКИ ============
+
+app.get('/api/links', (req, res) => {
+    db.all(`SELECT * FROM links`, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows || []);
+    });
+});
 
 app.post('/api/links', (req, res) => {
-    const link = {
-        id: uuidv4(),
-        name: req.body.name,
-        url: req.body.url,
-        type: req.body.type || 'href'
-    };
-    db.links.push(link);
-    saveDB();
-    res.json(link);
+    const id = uuidv4();
+    const { name, url, type } = req.body;
+    
+    if (!name || !url) {
+        return res.status(400).json({ error: 'name и url обязательны' });
+    }
+
+    db.run(
+        `INSERT INTO links (id, name, url, type) VALUES (?, ?, ?, ?)`,
+        [id, name, url, type || 'href'],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id, name, url, type: type || 'href' });
+        }
+    );
 });
 
 app.delete('/api/links/:id', (req, res) => {
-    db.links = db.links.filter(l => l.id !== req.params.id);
-    saveDB();
-    res.json({ success: true });
+    db.run(`DELETE FROM links WHERE id = ?`, req.params.id, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, deleted: this.changes });
+    });
 });
 
-// Все остальные маршруты - отдаём index.html
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// ============ ФРОНТЕНД ============
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/admin.html'));
+});
+
+app.get('/demo.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/demo.html'));
+});
+
+app.get('/embed.js', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/embed.js'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server: http://localhost:${PORT}`);
-    console.log(`📋 Admin: http://localhost:${PORT}/admin.html`);
-    console.log(`🎨 Demo: http://localhost:${PORT}/demo.html`);
+    console.log(`🚀 Сервер: http://localhost:${PORT}`);
+    console.log(`📋 Админка: http://localhost:${PORT}/admin.html`);
+    console.log(`🎨 Демо: http://localhost:${PORT}/demo.html`);
 });
