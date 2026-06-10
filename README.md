@@ -35,7 +35,7 @@ agencycms/
  Запуск одной командой
 
  1. Склонировать репозиторий
-git clone https://github.com/ВАШ_ЛОГИН/agencycms
+git clone https://github.com/SkarbovOleg/Agency-CMS.git
 cd agencycms
 
  2. Запустить проект
